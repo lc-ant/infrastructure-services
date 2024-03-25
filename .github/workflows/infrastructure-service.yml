@@ -1,0 +1,36 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build-check-tests:
+    uses: lc-ant/parent/.github/workflows/template.maven-build.yml@develop
+  deploy-snapshot-jars:
+    needs: build-check-tests
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
+    uses: lc-ant/parent/.github/workflows/template.maven-deploy-snapshot-jars.yml@develop
+    permissions:
+      contents: read
+      packages: write
+  deploy-snapshot-docker-image-config-server:
+    needs: deploy-snapshot-jars
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: lc-ant/parent/.github/workflows/template.deploy-spring-boot-docker-image-snapshot.yml@develop
+    with:
+      spring-boot-project-path: spring-boot/configuration-server
+      spring-boot-project-name: configuration-server
+      docker-image-suffix: /configuration-server
+  deploy-snapshot-docker-image-eureka-server:
+    needs: deploy-snapshot-jars
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: lc-ant/parent/.github/workflows/template.deploy-spring-boot-docker-image-snapshot.yml@develop
+    with:
+      spring-boot-project-path: spring-boot/eureka-server
+      spring-boot-project-name: eureka-server
+      docker-image-suffix: /eureka-server
